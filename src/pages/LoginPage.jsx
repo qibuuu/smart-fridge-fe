@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { login as apiLogin, register as apiRegister } from '../api/auth';
+import { login as apiLogin, register as apiRegister, verifyEmail as apiVerifyEmail, resendVerification } from '../api/auth';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -14,11 +14,27 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: '', username: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  // Email verification state
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
   const { login, googleLogin } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const startResendCooldown = () => {
+    setResendCooldown(60);
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,13 +51,40 @@ export default function LoginPage() {
         navigate('/');
       } else {
         await apiRegister({ username: form.username, email: form.email, password: form.password });
-        toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-        setTab('login');
-        setForm({ email: form.email, username: '', password: '', confirmPassword: '' });
+        setPendingEmail(form.email);
+        setAwaitingVerification(true);
+        startResendCooldown();
+        toast.success('Mã xác nhận đã được gửi tới email của bạn!');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Đã có lỗi xảy ra!');
     } finally { setLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) { toast.error('Vui lòng nhập mã OTP 6 chữ số.'); return; }
+    setLoading(true);
+    try {
+      const res = await apiVerifyEmail(otp);
+      const { token, ...userData } = res.data;
+      login(userData, token);
+      toast.success('Xác nhận email thành công! Chào mừng bạn đến với SmartFridge 🎉');
+      navigate('/');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Mã OTP không đúng hoặc đã hết hạn.');
+    } finally { setLoading(false); }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      await resendVerification(pendingEmail);
+      startResendCooldown();
+      toast.success('Đã gửi lại mã xác nhận!');
+    } catch {
+      toast.error('Không thể gửi lại mã. Vui lòng thử lại.');
+    }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -111,14 +154,54 @@ export default function LoginPage() {
               }}>SmartFridge</span>
             </div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: '#881337' }}>
-              {tab === 'login' ? 'Chào mừng trở lại' : 'Tạo tài khoản mới'}
+              {awaitingVerification ? 'Xác nhận email' : tab === 'login' ? 'Chào mừng trở lại' : 'Tạo tài khoản mới'}
             </h2>
             <p style={{ fontSize: 14, color: 'rgba(25,29,25,0.6)', marginTop: 2 }}>
-              {tab === 'login' ? 'Đăng nhập để tiếp tục.' : 'Điền thông tin để bắt đầu hành trình.'}
+              {awaitingVerification
+                ? `Mã OTP đã được gửi tới ${pendingEmail}`
+                : tab === 'login' ? 'Đăng nhập để tiếp tục.' : 'Điền thông tin để bắt đầu hành trình.'}
             </p>
           </div>
 
-          {/* Tab Toggle */}
+          {/* ── Email Verification Step ── */}
+          {awaitingVerification ? (
+            <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <span className="material-symbols-outlined icon-fill" style={{
+                  fontSize: 56, color: '#f43f5e', display: 'block', marginBottom: 8,
+                }}>mark_email_read</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Mã xác nhận (6 chữ số)</label>
+                <input
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                  className="input-base"
+                  style={{ textAlign: 'center', fontSize: 28, fontWeight: 800, letterSpacing: '0.3em', paddingTop: 14, paddingBottom: 14 }}
+                />
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary"
+                style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 15, opacity: loading ? 0.7 : 1 }}>
+                {loading ? <><div className="spinner-small" /> Đang xác nhận...</> : <>Xác nhận tài khoản <span className="material-symbols-outlined" style={{ fontSize: 16 }}>verified</span></>}
+              </button>
+              <div style={{ textAlign: 'center' }}>
+                <button type="button" onClick={handleResend} disabled={resendCooldown > 0}
+                  style={{ background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                    color: resendCooldown > 0 ? 'rgba(0,0,0,0.3)' : '#f43f5e', fontSize: 13, fontWeight: 600,
+                    fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                  {resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP'}
+                </button>
+              </div>
+              <button type="button" onClick={() => { setAwaitingVerification(false); setTab('login'); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(0,0,0,0.4)', fontSize: 12,
+                  cursor: 'pointer', textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                ← Quay về đăng nhập
+              </button>
+            </form>
+          ) : (
           <div style={{ background: 'rgba(254,205,211,0.4)', borderRadius: 9999, padding: 4, display: 'flex', border: '1px solid rgba(254,205,211,0.5)' }}>
             {['login', 'register'].map((t) => (
               <button key={t} onClick={() => setTab(t)} style={{
@@ -227,6 +310,7 @@ export default function LoginPage() {
             <a href="#" style={{ color: '#f43f5e', fontWeight: 600, textDecoration: 'none' }}>Điều khoản</a> &{' '}
             <a href="#" style={{ color: '#f43f5e', fontWeight: 600, textDecoration: 'none' }}>Quyền riêng tư</a> của chúng tôi.
           </p>
+          )} {/* End of awaitingVerification ternary */}
         </div>
       </div>
 

@@ -335,6 +335,40 @@ export default function AllRecipesPage() {
                 <SkeletonCard key={n} />
               ))}
             </div>
+          ) : error ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: 60,
+                color: 'rgba(25,29,25,0.6)',
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 64, color: '#fecdd3' }}
+              >
+                wifi_off
+              </span>
+              <p style={{ fontSize: 16, marginTop: 12, fontWeight: 600 }}>
+                Không thể tải công thức. Vui lòng kiểm tra kết nối và thử lại.
+              </p>
+              <button
+                onClick={() => refetch()}
+                style={{
+                  marginTop: 16,
+                  padding: '10px 24px',
+                  borderRadius: 9999,
+                  background: COLORS.primary,
+                  color: 'white',
+                  border: 'none',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif',
+                }}
+              >
+                Thử lại
+              </button>
+            </div>
           ) : sorted.length === 0 ? (
             <div
               style={{

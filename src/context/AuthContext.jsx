@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const isAuthenticated = !!user && !!localStorage.getItem('token');
+  const isAuthenticated = !!user;
 
   return (
     <AuthContext.Provider value={{ user, login, googleLogin, logout, isAuthenticated }}>

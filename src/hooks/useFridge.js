@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getMyFridge, addToFridge, deleteFromFridge, suggestFromFridge } from '../api/fridge';
+import { getMyFridge, addToFridge, deleteFromFridge, clearAllFridge, suggestFromFridge } from '../api/fridge';
 
 export function useFridge() {
   const [items, setItems]     = useState([]);
@@ -26,10 +26,7 @@ export function useFridge() {
   const suggest = () => suggestFromFridge();
 
   const clearAll = async () => {
-    // Delete items sequentially to be safer
-    for (const item of items) {
-      await deleteFromFridge(item.id);
-    }
+    await clearAllFridge(); // single API call — 1 request instead of N
     setItems([]);
   };
 

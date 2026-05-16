@@ -7,7 +7,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { TAGS, DIFFICULTIES, SORT_OPTIONS, COLORS } from '../constants';
 
 export default function AllRecipesPage() {
-  const { recipes, loading, refetch } = useRecipes();
+  const { recipes, loading, error, refetch } = useRecipes();
   const { isFavorite, toggle } = useFavorites();
 
   const [searchInput, setSearchInput] = useState('');

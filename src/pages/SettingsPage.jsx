@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -7,11 +7,33 @@ import apiClient from '../api/apiClient';
 import { COLORS } from '../constants';
 
 export default function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
+  useEffect(() => {
+    // Sync user info from server to ensure email is up-to-date
+    const syncUser = async () => {
+      try {
+        const res = await apiClient.get('/auth/me');
+        const token = localStorage.getItem('token');
+        if (res.data && token) {
+          login(res.data, token); // This updates context + localStorage
+        }
+      } catch (err) {
+        console.error('Failed to sync user info', err);
+      }
+    };
+    syncUser();
+  }, []);
+
   const [username, setUsername] = useState(user?.username || '');
+
+  useEffect(() => {
+    if (user?.username) {
+      setUsername(user.username);
+    }
+  }, [user]);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [passwords, setPasswords] = useState({
@@ -169,53 +191,25 @@ export default function SettingsPage() {
               )}
             </section>
 
-            {/* App Settings Section */}
-            <section className="glass-card" style={{ padding: '20px' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: COLORS.rose900, marginBottom: 16, paddingLeft: 8 }}>
-                Ứng dụng
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: 12, background: 'rgba(255,255,255,0.4)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span className="material-symbols-outlined" style={{ color: COLORS.primary }}>notifications</span>
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>Thông báo</span>
-                  </div>
-                  <div style={{ width: 40, height: 20, borderRadius: 10, background: COLORS.primary, position: 'relative' }}>
-                    <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'white', position: 'absolute', right: 2, top: 2 }} />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span className="material-symbols-outlined" style={{ color: COLORS.primary }}>dark_mode</span>
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>Chế độ tối</span>
-                  </div>
-                  <div style={{ width: 40, height: 20, borderRadius: 10, background: '#cbd5e1', position: 'relative' }}>
-                    <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'white', position: 'absolute', left: 2, top: 2 }} />
-                  </div>
-                </div>
-              </div>
-            </section>
-
             {/* Logout Button */}
-            <button 
-              onClick={handleLogout}
-              className="btn-secondary" 
-              style={{ 
-                width: '100%', 
-                justifyContent: 'center', 
-                border: 'none', 
-                background: 'rgba(244, 63, 94, 0.1)', 
-                color: '#f43f5e',
-                padding: '16px'
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
-              Đăng xuất tài khoản
-            </button>
+            <div style={{ marginTop: 8 }}>
+              <button 
+                onClick={handleLogout}
+                className="btn-secondary" 
+                style={{ 
+                  width: '100%', 
+                  justifyContent: 'center', 
+                  border: 'none', 
+                  background: 'rgba(244, 63, 94, 0.1)', 
+                  color: '#f43f5e',
+                  padding: '16px'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
+                Đăng xuất tài khoản
+              </button>
+            </div>
             
-            <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(25,29,25,0.4)', marginTop: 8 }}>
-              Phiên bản 2.1.0 • SmartFridge
-            </p>
           </div>
         </div>
       </main>

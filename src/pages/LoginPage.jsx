@@ -202,115 +202,118 @@ export default function LoginPage() {
               </button>
             </form>
           ) : (
-          <div style={{ background: 'rgba(254,205,211,0.4)', borderRadius: 9999, padding: 4, display: 'flex', border: '1px solid rgba(254,205,211,0.5)' }}>
-            {['login', 'register'].map((t) => (
-              <button key={t} onClick={() => setTab(t)} style={{
-                flex: 1, padding: '8px', borderRadius: 9999, border: 'none',
-                background: tab === t ? 'white' : 'transparent',
-                color: tab === t ? '#f43f5e' : 'rgba(244,63,94,0.5)',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.2s', fontFamily: 'Plus Jakarta Sans, sans-serif',
-              }}>
-                {t === 'login' ? 'Đăng nhập' : 'Đăng ký'}
-              </button>
-            ))}
-          </div>
-
-          {/* Google Login Section (Login tab only) */}
-          {tab === 'login' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-               <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => toast.error('Đăng nhập Google thất bại')}
-                    useOneTap
-                    shape="pill"
-                    theme="filled_blue"
-                    text="signin_with"
-                    width="100%"
-                  />
-               </div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                 <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
-                 <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.3)', fontWeight: 700 }}>HOẶC</span>
-                 <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
-               </div>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {tab === 'register' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Tên người dùng</label>
-                <div style={{ position: 'relative' }}>
-                  <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>person</span>
-                  <input name="username" value={form.username} onChange={handleChange} placeholder="username" required={tab === 'register'} className="input-base" style={{ paddingLeft: 40 }} />
-                </div>
-              </div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>
-                {tab === 'login' ? 'Tên đăng nhập hoặc Email' : 'Email'}
-              </label>
-              <div style={{ position: 'relative' }}>
-                <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>mail</span>
-                <input name="email" type={tab === 'register' ? 'email' : 'text'} value={form.email} onChange={handleChange}
-                  placeholder={tab === 'login' ? 'username hoặc email' : 'chef@example.com'} required className="input-base" style={{ paddingLeft: 40 }} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Mật khẩu</label>
-                {tab === 'login' && (
-                  <button type="button" onClick={() => setShowForgotModal(true)} style={{ background: 'none', border: 'none', color: '#f43f5e', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                    Quên mật khẩu?
+            <>
+              {/* Tab Toggle */}
+              <div style={{ background: 'rgba(254,205,211,0.4)', borderRadius: 9999, padding: 4, display: 'flex', border: '1px solid rgba(254,205,211,0.5)' }}>
+                {['login', 'register'].map((t) => (
+                  <button key={t} onClick={() => setTab(t)} style={{
+                    flex: 1, padding: '8px', borderRadius: 9999, border: 'none',
+                    background: tab === t ? 'white' : 'transparent',
+                    color: tab === t ? '#f43f5e' : 'rgba(244,63,94,0.5)',
+                    fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                    boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.2s', fontFamily: 'Plus Jakarta Sans, sans-serif',
+                  }}>
+                    {t === 'login' ? 'Đăng nhập' : 'Đăng ký'}
                   </button>
-                )}
+                ))}
               </div>
-              <div style={{ position: 'relative' }}>
-                <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>lock</span>
-                <input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={handleChange}
-                  placeholder="••••••••" required className="input-base" style={{ paddingLeft: 40, paddingRight: 40 }} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
-                  position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer', color: '#fda4af', display: 'flex',
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                    {showPassword ? 'visibility' : 'visibility_off'}
-                  </span>
-                </button>
-              </div>
-            </div>
-            {tab === 'register' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Xác nhận mật khẩu</label>
-                <div style={{ position: 'relative' }}>
-                  <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>lock</span>
-                  <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange}
-                    placeholder="••••••••" required={tab === 'register'} className="input-base" style={{ paddingLeft: 40 }} />
-                </div>
-              </div>
-            )}
-            <button type="submit" disabled={loading} className="btn-primary"
-              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 15, marginTop: 4, opacity: loading ? 0.7 : 1 }}>
-              {loading ? (
-                <><div className="spinner-small" /> Đang xử lý...</>
-              ) : (
-                <>{tab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
-                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
-                </>
-              )}
-            </button>
-          </form>
 
-          <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(25,29,25,0.6)' }}>
-            Tiếp tục đồng nghĩa với việc bạn đồng ý với{' '}
-            <a href="#" style={{ color: '#f43f5e', fontWeight: 600, textDecoration: 'none' }}>Điều khoản</a> &{' '}
-            <a href="#" style={{ color: '#f43f5e', fontWeight: 600, textDecoration: 'none' }}>Quyền riêng tư</a> của chúng tôi.
-          </p>
-          )} {/* End of awaitingVerification ternary */}
+              {/* Google Login Section (Login tab only) */}
+              {tab === 'login' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                   <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => toast.error('Đăng nhập Google thất bại')}
+                        useOneTap
+                        shape="pill"
+                        theme="filled_blue"
+                        text="signin_with"
+                        width="100%"
+                      />
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                     <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+                     <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.3)', fontWeight: 700 }}>HOẶC</span>
+                     <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+                   </div>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {tab === 'register' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Tên người dùng</label>
+                    <div style={{ position: 'relative' }}>
+                      <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>person</span>
+                      <input name="username" value={form.username} onChange={handleChange} placeholder="username" required={tab === 'register'} className="input-base" style={{ paddingLeft: 40 }} />
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>
+                    {tab === 'login' ? 'Tên đăng nhập hoặc Email' : 'Email'}
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>mail</span>
+                    <input name="email" type={tab === 'register' ? 'email' : 'text'} value={form.email} onChange={handleChange}
+                      placeholder={tab === 'login' ? 'username hoặc email' : 'chef@example.com'} required className="input-base" style={{ paddingLeft: 40 }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Mật khẩu</label>
+                    {tab === 'login' && (
+                      <button type="button" onClick={() => setShowForgotModal(true)} style={{ background: 'none', border: 'none', color: '#f43f5e', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                        Quên mật khẩu?
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>lock</span>
+                    <input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={handleChange}
+                      placeholder="••••••••" required className="input-base" style={{ paddingLeft: 40, paddingRight: 40 }} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', color: '#fda4af', display: 'flex',
+                    }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                        {showPassword ? 'visibility' : 'visibility_off'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                {tab === 'register' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#881337' }}>Xác nhận mật khẩu</label>
+                    <div style={{ position: 'relative' }}>
+                      <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#fda4af', fontSize: 20 }}>lock</span>
+                      <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange}
+                        placeholder="••••••••" required={tab === 'register'} className="input-base" style={{ paddingLeft: 40 }} />
+                    </div>
+                  </div>
+                )}
+                <button type="submit" disabled={loading} className="btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 15, marginTop: 4, opacity: loading ? 0.7 : 1 }}>
+                  {loading ? (
+                    <><div className="spinner-small" /> Đang xử lý...</>
+                  ) : (
+                    <>{tab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(25,29,25,0.6)' }}>
+                Tiếp tục đồng nghĩa với việc bạn đồng ý với{' '}
+                <a href="#" style={{ color: '#f43f5e', fontWeight: 600, textDecoration: 'none' }}>Điều khoản</a> &{' '}
+                <a href="#" style={{ color: '#f43f5e', fontWeight: 600, textDecoration: 'none' }}>Quyền riêng tư</a> của chúng tôi.
+              </p>
+            </>
+          )}
         </div>
       </div>
 

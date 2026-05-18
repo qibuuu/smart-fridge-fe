@@ -48,7 +48,8 @@ export default function LoginPage() {
         const { token, ...userData } = res.data;
         login(userData, token);
         toast.success('Đăng nhập thành công!');
-        navigate('/');
+        const isAdmin = userData.role === 'ADMIN' || userData.role === 'ROLE_ADMIN';
+        navigate(isAdmin ? '/admin' : '/');
       } else {
         await apiRegister({ username: form.username, email: form.email, password: form.password });
         setPendingEmail(form.email);
@@ -70,7 +71,8 @@ export default function LoginPage() {
       const { token, ...userData } = res.data;
       login(userData, token);
       toast.success('Xác nhận email thành công! Chào mừng bạn đến với SmartFridge 🎉');
-      navigate('/');
+      const isAdmin = userData.role === 'ADMIN' || userData.role === 'ROLE_ADMIN';
+      navigate(isAdmin ? '/admin' : '/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Mã OTP không đúng hoặc đã hết hạn.');
     } finally { setLoading(false); }
@@ -96,7 +98,8 @@ export default function LoginPage() {
       const { token, ...userData } = res.data;
       googleLogin(userData, token);
       toast.success('Đăng nhập Google thành công!');
-      navigate('/');
+      const isAdmin = userData.role === 'ADMIN' || userData.role === 'ROLE_ADMIN';
+      navigate(isAdmin ? '/admin' : '/');
     } catch (err) {
       toast.error('Đăng nhập Google thất bại!');
     } finally {
@@ -139,28 +142,21 @@ export default function LoginPage() {
           boxShadow: '0 20px 60px rgba(57,105,56,0.2)',
           display: 'flex', flexDirection: 'column', gap: 20,
         }}>
-          {/* Brand */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span className="material-symbols-outlined icon-fill" style={{
-                fontSize: 28, background: 'linear-gradient(to right, #f43f5e, #fb923c)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>restaurant_menu</span>
-              <span style={{
-                fontSize: 24, fontWeight: 900,
-                background: 'linear-gradient(to right, #f43f5e, #fb923c)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.5px',
-              }}>SmartFridge</span>
-            </div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#881337' }}>
-              {awaitingVerification ? 'Xác nhận email' : tab === 'login' ? 'Chào mừng trở lại' : 'Tạo tài khoản mới'}
-            </h2>
-            <p style={{ fontSize: 14, color: 'rgba(25,29,25,0.6)', marginTop: 2 }}>
-              {awaitingVerification
-                ? `Mã OTP đã được gửi tới ${pendingEmail}`
-                : tab === 'login' ? 'Đăng nhập để tiếp tục.' : 'Điền thông tin để bắt đầu hành trình.'}
-            </p>
+          {/* Brand Logo Centered */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <img 
+              src="/logo-text-bg-zoomed.png" 
+              alt="SmartFridge" 
+              style={{ height: 150, width: 'auto', objectFit: 'contain' }}
+            />
+            {awaitingVerification && (
+              <div style={{ textAlign: 'center', marginTop: 12 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#881337' }}>Xác nhận email</h2>
+                <p style={{ fontSize: 13, color: 'rgba(25,29,25,0.6)', marginTop: 2 }}>
+                  Mã OTP đã được gửi tới {pendingEmail}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* ── Email Verification Step ── */}

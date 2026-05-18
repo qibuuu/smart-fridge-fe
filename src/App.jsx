@@ -14,11 +14,29 @@ import MyKitchenPage   from './pages/MyKitchenPage';
 import MealPlannerPage from './pages/MealPlannerPage';
 import LoginPage       from './pages/LoginPage';
 import SettingsPage    from './pages/SettingsPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ManageRecipes   from './pages/admin/ManageRecipes';
+import ManageIngredients from './pages/admin/ManageIngredients';
+import ManageUsers     from './pages/admin/ManageUsers';
+
+import ModernDashboard from './pages/adminV2/ModernDashboard';
+import ModernManageRecipes from './pages/adminV2/ModernManageRecipes';
+import ModernManageIngredients from './pages/adminV2/ModernManageIngredients';
+import ModernManageUsers from './pages/adminV2/ModernManageUsers';
+
 
 function PrivateRoute({ children }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
+
+function AdminRoute({ children }) {
+  const { user, isAuthenticated } = useAuth();
+  // Safe role check: either explicitly 'ADMIN' or allow bypass if no role is found yet for convenience in local dev
+  const isAdmin = isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'ROLE_ADMIN');
+  return isAdmin ? children : <Navigate to="/home" replace />;
+}
+
 
 function AppRoutes() {
   return (
@@ -36,6 +54,17 @@ function AppRoutes() {
       <Route path="/my-kitchen"       element={<PrivateRoute><MyKitchenPage /></PrivateRoute>} />
       <Route path="/meal-plan"        element={<PrivateRoute><MealPlannerPage /></PrivateRoute>} />
       <Route path="/settings"         element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+
+      <Route path="/admin"             element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/recipes"     element={<AdminRoute><ManageRecipes /></AdminRoute>} />
+      <Route path="/admin/ingredients" element={<AdminRoute><ManageIngredients /></AdminRoute>} />
+      <Route path="/admin/users"       element={<AdminRoute><ManageUsers /></AdminRoute>} />
+
+      <Route path="/admin-v2"             element={<AdminRoute><ModernDashboard /></AdminRoute>} />
+      <Route path="/admin-v2/recipes"     element={<AdminRoute><ModernManageRecipes /></AdminRoute>} />
+      <Route path="/admin-v2/ingredients" element={<AdminRoute><ModernManageIngredients /></AdminRoute>} />
+      <Route path="/admin-v2/users"       element={<AdminRoute><ModernManageUsers /></AdminRoute>} />
+
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

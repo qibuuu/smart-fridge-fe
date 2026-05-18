@@ -65,16 +65,39 @@ export default function Navbar() {
 
           {/* Brand */}
           <Link to="/" style={{
-            fontSize: 22,
-            fontWeight: 900,
-            background: 'linear-gradient(to right, #396938, #735858)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
             textDecoration: 'none',
-            letterSpacing: '-0.5px',
             flexShrink: 0,
           }}>
-            SmartFridge
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              backgroundColor: '#c8ffc0',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #c1c9bc',
+            }}>
+              <img
+                src="/logo_bg.png"
+                alt="SmartFridge Logo"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+            <span style={{
+              fontSize: 22,
+              fontWeight: 900,
+              background: 'linear-gradient(to right, #396938, #735858)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.5px',
+            }}>
+              SmartFridge
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

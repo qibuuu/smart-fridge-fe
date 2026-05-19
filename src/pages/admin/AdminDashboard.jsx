@@ -5,13 +5,41 @@ import { getAllIngredients } from '../../api/ingredients';
 import { getAllUsers } from '../../api/users';
 import { Link } from 'react-router-dom';
 
+const C = {
+  primary: '#396938',
+  primaryContainer: '#c8ffc0',
+  onPrimaryContainer: '#215023',
+  tertiary: '#40683e',
+  tertiaryContainer: '#cefdc7',
+  secondary: '#735858',
+  secondaryContainer: '#ffdada',
+  onSecondaryContainer: '#795d5e',
+  surface: '#f7faf3',
+  surfaceContainer: '#ecefe8',
+  surfaceContainerLow: '#f2f5ee',
+  surfaceContainerLowest: '#ffffff',
+  surfaceContainerHigh: '#e6e9e2',
+  onSurface: '#191d19',
+  onSurfaceVariant: '#42493f',
+  outline: '#72796e',
+  outlineVariant: '#c1c9bc',
+  error: '#ba1a1a',
+  errorContainer: '#ffdad6',
+};
+
+const statCardStyle = {
+  backgroundColor: C.surfaceContainerLowest,
+  borderRadius: '16px',
+  padding: '20px',
+  boxShadow: '0 8px 32px -4px rgba(57,105,56,0.07)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+};
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    recipesCount: 0,
-    ingredientsCount: 0,
-    usersCount: 0,
-    loading: true,
-  });
+  const [stats, setStats] = useState({ recipesCount: 0, ingredientsCount: 0, usersCount: 0, loading: true });
+  const [recentRecipes, setRecentRecipes] = useState([]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -27,6 +55,7 @@ export default function AdminDashboard() {
           usersCount: usersRes.data.length,
           loading: false,
         });
+        setRecentRecipes(recipesRes.data.slice(0, 3));
       } catch (error) {
         console.error('Error fetching dashboard stats', error);
         setStats((prev) => ({ ...prev, loading: false }));
@@ -37,151 +66,207 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-[#191d19]">Dashboard Overview</h2>
-        <p className="text-[#42493f] mt-1">Review system metrics and manage your culinary catalog.</p>
+      {/* Page Header */}
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 700, color: C.onSurface, letterSpacing: '-0.02em', lineHeight: '40px' }}>
+          Overview
+        </h1>
+        <p style={{ color: C.onSurfaceVariant, fontSize: '15px', marginTop: '4px' }}>
+          Monitor and manage your SmartFridge ecosystem.
+        </p>
       </div>
 
       {stats.loading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#396938]"></div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+          <div style={{
+            width: '48px', height: '48px', borderRadius: '50%',
+            border: `3px solid ${C.primaryContainer}`,
+            borderTopColor: C.primary,
+            animation: 'spin 0.8s linear infinite'
+          }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* Stats Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-[#c1c9bc] shadow-xs flex items-center justify-between">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            {/* Recipes */}
+            <div style={statCardStyle}>
               <div>
-                <p className="text-xs font-bold text-[#42493f] uppercase tracking-wider">Total Recipes</p>
-                <h2 className="text-3xl font-extrabold text-[#191d19] mt-1">{stats.recipesCount}</h2>
-                <span className="text-[#396938] text-xs font-semibold flex items-center gap-1 mt-1">
-                  <span className="material-symbols-outlined text-[16px]">trending_up</span> +12% this month
+                <p style={{ fontSize: '11px', fontWeight: 600, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Total Recipes
+                </p>
+                <h2 style={{ fontSize: '28px', fontWeight: 700, color: C.onSurface, lineHeight: '36px', marginTop: '4px' }}>
+                  {stats.recipesCount}
+                </h2>
+                <span style={{ color: C.primary, fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>trending_up</span>
+                  Active recipes in catalog
                 </span>
               </div>
-              <div className="w-12 h-12 bg-[#c8ffc0] rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#396938]">restaurant</span>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: C.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ color: C.primary, fontSize: '22px' }}>restaurant</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-[#c1c9bc] shadow-xs flex items-center justify-between">
+            {/* Ingredients */}
+            <div style={statCardStyle}>
               <div>
-                <p className="text-xs font-bold text-[#42493f] uppercase tracking-wider">Active Ingredients</p>
-                <h2 className="text-3xl font-extrabold text-[#191d19] mt-1">{stats.ingredientsCount}</h2>
-                <span className="text-[#396938] text-xs font-semibold flex items-center gap-1 mt-1">
-                  <span className="material-symbols-outlined text-[16px]">check_circle</span> 98% in stock
+                <p style={{ fontSize: '11px', fontWeight: 600, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Active Ingredients
+                </p>
+                <h2 style={{ fontSize: '28px', fontWeight: 700, color: C.onSurface, lineHeight: '36px', marginTop: '4px' }}>
+                  {stats.ingredientsCount}
+                </h2>
+                <span style={{ color: C.tertiary, fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>check_circle</span>
+                  Ingredient library entries
                 </span>
               </div>
-              <div className="w-12 h-12 bg-[#cefdc7] rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#40683e]">nutrition</span>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: C.tertiaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ color: C.tertiary, fontSize: '22px' }}>nutrition</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-[#c1c9bc] shadow-xs flex items-center justify-between">
+            {/* Users */}
+            <div style={statCardStyle}>
               <div>
-                <p className="text-xs font-bold text-[#42493f] uppercase tracking-wider">Active Users</p>
-                <h2 className="text-3xl font-extrabold text-[#191d19] mt-1">{stats.usersCount}</h2>
-                <span className="text-[#735858] text-xs font-semibold flex items-center gap-1 mt-1">
-                  <span className="material-symbols-outlined text-[16px]">group</span> Community growth
+                <p style={{ fontSize: '11px', fontWeight: 600, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Registered Users
+                </p>
+                <h2 style={{ fontSize: '28px', fontWeight: 700, color: C.onSurface, lineHeight: '36px', marginTop: '4px' }}>
+                  {stats.usersCount}
+                </h2>
+                <span style={{ color: C.onSecondaryContainer, fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>group</span>
+                  Community growth
                 </span>
               </div>
-              <div className="w-12 h-12 bg-[#ffdada] rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#735858]">group</span>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: C.secondaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ color: C.secondary, fontSize: '22px' }}>group</span>
               </div>
             </div>
           </div>
 
-          {/* Quick Actions & System Info Bento Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Quick Actions Card (2/3 width on desktop) */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-[#c1c9bc] shadow-xs flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-[#191d19] mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#396938]">bolt</span>
-                  Quick Actions
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Link
-                    to="/admin/recipes"
-                    className="group cursor-pointer bg-white p-4 rounded-xl border border-[#c1c9bc] hover:border-[#396938] hover:bg-[#c8ffc0]/20 transition-all flex flex-col items-center text-center gap-2"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-[#c8ffc0] group-hover:bg-white flex items-center justify-center transition-colors">
-                      <span className="material-symbols-outlined text-[#396938]">add_circle</span>
-                    </div>
-                    <h4 className="font-bold text-sm text-[#191d19]">Add New Recipe</h4>
-                    <p className="text-xs text-[#42493f]">Publish a new culinary creation</p>
-                  </Link>
+          {/* Quick Actions */}
+          <section>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: C.onSurface, marginBottom: '16px' }}>Quick Actions</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+              {[
+                { to: '/admin/recipes', icon: 'add_circle', label: 'Add New Recipe', desc: 'Publish a new culinary creation' },
+                { to: '/admin/ingredients', icon: 'inventory_2', label: 'Manage Ingredients', desc: 'Update ingredient library' },
+                { to: '/admin/users', icon: 'person_add', label: 'Manage Users', desc: 'Oversee member accounts' },
+              ].map((action) => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  style={{
+                    backgroundColor: C.surface,
+                    border: `1px solid ${C.outlineVariant}`,
+                    borderRadius: '14px',
+                    padding: '20px',
+                    textDecoration: 'none',
+                    display: 'block',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = C.primary;
+                    e.currentTarget.style.backgroundColor = C.primaryContainer;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = C.outlineVariant;
+                    e.currentTarget.style.backgroundColor = C.surface;
+                  }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: C.primaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                    <span className="material-symbols-outlined" style={{ color: C.primary }}>{action.icon}</span>
+                  </div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: C.onSurface }}>{action.label}</h4>
+                  <p style={{ fontSize: '12px', color: C.onSurfaceVariant, marginTop: '4px' }}>{action.desc}</p>
+                </Link>
+              ))}
 
-                  <Link
-                    to="/admin/ingredients"
-                    className="group cursor-pointer bg-white p-4 rounded-xl border border-[#c1c9bc] hover:border-[#396938] hover:bg-[#c8ffc0]/20 transition-all flex flex-col items-center text-center gap-2"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-[#c8ffc0] group-hover:bg-white flex items-center justify-center transition-colors">
-                      <span className="material-symbols-outlined text-[#396938]">inventory_2</span>
-                    </div>
-                    <h4 className="font-bold text-sm text-[#191d19]">Manage Ingredients</h4>
-                    <p className="text-xs text-[#42493f]">Update stock levels and tags</p>
-                  </Link>
-
-                  <Link
-                    to="/admin/users"
-                    className="group cursor-pointer bg-white p-4 rounded-xl border border-[#c1c9bc] hover:border-[#396938] hover:bg-[#c8ffc0]/20 transition-all flex flex-col items-center text-center gap-2"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-[#c8ffc0] group-hover:bg-white flex items-center justify-center transition-colors">
-                      <span className="material-symbols-outlined text-[#396938]">person_add</span>
-                    </div>
-                    <h4 className="font-bold text-sm text-[#191d19]">Manage Users</h4>
-                    <p className="text-xs text-[#42493f]">Review member accounts</p>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Bento organic visual anchor card (like in the mockup!) */}
-              <div className="relative overflow-hidden group rounded-xl transition-all h-28 flex flex-col justify-end mt-4 p-4 text-white">
-                <div className="absolute inset-0 opacity-80 mix-blend-multiply bg-[#396938]">
+              {/* Hero Visual Card */}
+              <div style={{ borderRadius: '14px', overflow: 'hidden', position: 'relative', minHeight: '160px', backgroundColor: C.primary, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '20px', cursor: 'pointer' }}>
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.35 }}>
                   <img
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    alt="Organic fresh vegetables"
-                    src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80"
+                    src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80"
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', mixBlendMode: 'overlay' }}
                   />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                <div className="relative z-10 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-sm">Organic Seeding Active</h4>
-                    <p className="text-xs text-gray-200">Catalog utilizes premium high-resolution crop photography.</p>
-                  </div>
-                  <span className="material-symbols-outlined text-[#c8ffc0]">spa</span>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)' }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <h4 style={{ fontWeight: 700, fontSize: '14px', color: 'white' }}>Recipe Catalog</h4>
+                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', marginTop: '2px' }}>Premium culinary database active</p>
                 </div>
               </div>
             </div>
+          </section>
 
-            {/* System Info Card (1/3 width on desktop) */}
-            <div className="bg-white p-6 rounded-2xl border border-[#c1c9bc] shadow-xs flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-[#191d19] mb-3 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-amber-500">info</span>
-                  System Info
-                </h3>
-                <div className="space-y-3 mt-4 text-[#42493f] text-sm">
-                  <div className="flex justify-between border-b border-[#c1c9bc] pb-2">
-                    <span className="font-medium">Backend Health Check</span>
-                    <span className="text-[#396938] font-bold flex items-center gap-1">
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#396938] inline-block"></span> Operational
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-b border-[#c1c9bc] pb-2">
-                    <span className="font-medium">API Version</span>
-                    <span className="font-semibold text-[#191d19]">v1.0.0 (Local)</span>
-                  </div>
-                  <div className="flex justify-between pb-2">
-                    <span className="font-medium">Environment</span>
-                    <span className="font-semibold text-blue-600">SmartFridge Ecosystem</span>
-                  </div>
-                </div>
+          {/* Bottom: Recent Recipes + System Info */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            {/* Recent Recipes */}
+            <div style={{ backgroundColor: C.surfaceContainerLowest, borderRadius: '16px', padding: '24px', boxShadow: '0 8px 32px -4px rgba(57,105,56,0.07)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: C.onSurface }}>Recent Recipes</h3>
+                <Link to="/admin/recipes" style={{ color: C.primary, fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>View All</Link>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {recentRecipes.length === 0 ? (
+                  <p style={{ color: C.onSurfaceVariant, fontSize: '13px' }}>No recipes yet.</p>
+                ) : recentRecipes.map((r) => (
+                  <div
+                    key={r.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '10px', borderRadius: '10px', transition: 'background 0.15s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.surfaceContainer; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    <div style={{ width: '44px', height: '44px', borderRadius: '10px', overflow: 'hidden', backgroundColor: C.surfaceContainerHigh, flexShrink: 0 }}>
+                      {r.imageUrl ? (
+                        <img src={r.imageUrl} alt={r.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span className="material-symbols-outlined" style={{ color: C.onSurfaceVariant, fontSize: '20px' }}>restaurant</span>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: C.onSurface, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</p>
+                      <p style={{ fontSize: '12px', color: C.onSurfaceVariant, marginTop: '2px' }}>{r.difficulty || 'Recipe'}</p>
+                    </div>
+                    {r.tags && (
+                      <span style={{ backgroundColor: C.tertiaryContainer, color: '#4e774c', fontSize: '11px', fontWeight: 600, padding: '2px 10px', borderRadius: '999px', flexShrink: 0 }}>
+                        {r.tags}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              <div className="bg-[#c8ffc0] p-4 rounded-xl text-xs text-[#215023] font-semibold mt-4">
-                Tip: Dynamic image seeding is active! Make sure to upload recipe and ingredient photos via the upload manager to build a rich organic catalog.
+            {/* System Info */}
+            <div style={{ backgroundColor: C.surfaceContainerLowest, borderRadius: '16px', padding: '24px', boxShadow: '0 8px 32px -4px rgba(57,105,56,0.07)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, color: C.onSurface, marginBottom: '4px' }}>System Status</h3>
+              {[
+                { label: 'Backend Health', value: 'Operational', valueColor: C.primary, dot: C.primary },
+                { label: 'API Version', value: 'v1 (Local)', valueColor: C.onSurface, dot: null },
+                { label: 'Auth Mode', value: 'JWT + Google OAuth', valueColor: C.onSurface, dot: null },
+                { label: 'Environment', value: 'SmartFridge Ecosystem', valueColor: '#1d6ecc', dot: null },
+              ].map((row, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: i < 3 ? `1px solid ${C.outlineVariant}` : 'none', paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '13px', color: C.onSurfaceVariant, fontWeight: 500 }}>{row.label}</span>
+                  <span style={{ fontSize: '13px', color: row.valueColor, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {row.dot && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: row.dot, display: 'inline-block' }} />}
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+              <div style={{ backgroundColor: C.primaryContainer, borderRadius: '12px', padding: '14px', marginTop: '8px' }}>
+                <p style={{ fontSize: '12px', color: C.onPrimaryContainer, fontWeight: 600, lineHeight: '18px' }}>
+                  💡 Upload recipe and ingredient photos to build a rich visual catalog for your users.
+                </p>
               </div>
             </div>
           </div>

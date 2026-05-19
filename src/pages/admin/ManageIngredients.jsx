@@ -3,6 +3,29 @@ import AdminLayout from '../../components/AdminLayout';
 import { getAllIngredients, createIngredient, updateIngredient, deleteIngredient } from '../../api/ingredients';
 import { uploadImage } from '../../api/recipes';
 
+const C = {
+  primary: '#396938',
+  primaryContainer: '#c8ffc0',
+  onPrimaryContainer: '#215023',
+  tertiary: '#40683e',
+  tertiaryContainer: '#cefdc7',
+  secondary: '#735858',
+  secondaryContainer: '#ffdada',
+  surface: '#f7faf3',
+  surfaceContainerLow: '#f2f5ee',
+  surfaceContainerLowest: '#ffffff',
+  surfaceContainerHigh: '#e6e9e2',
+  surfaceBright: '#f7faf3',
+  onSurface: '#191d19',
+  onSurfaceVariant: '#42493f',
+  outline: '#72796e',
+  outlineVariant: '#c1c9bc',
+  error: '#ba1a1a',
+  errorContainer: '#ffdad6',
+};
+
+const iconColors = ['#396938', '#40683e', '#735858', '#4e774c', '#594041'];
+
 export default function ManageIngredients() {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,19 +34,13 @@ export default function ManageIngredients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 10;
 
-  // Form State
-  const [formData, setFormData] = useState({
-    name: '',
-    unit: 'g',
-    imageUrl: '',
-  });
-
+  const [formData, setFormData] = useState({ name: '', unit: 'g', imageUrl: '' });
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    fetchIngredients();
-  }, []);
+  useEffect(() => { fetchIngredients(); }, []);
 
   const fetchIngredients = async () => {
     try {
@@ -40,288 +57,275 @@ export default function ManageIngredients() {
   };
 
   const handleOpenAdd = () => {
-    setIsEditing(false);
-    setCurrentId(null);
-    setFormData({
-      name: '',
-      unit: 'g',
-      imageUrl: '',
-    });
+    setIsEditing(false); setCurrentId(null);
+    setFormData({ name: '', unit: 'g', imageUrl: '' });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (ing) => {
-    setIsEditing(true);
-    setCurrentId(ing.id);
-    setFormData({
-      name: ing.name || '',
-      unit: ing.unit || 'g',
-      imageUrl: ing.imageUrl || '',
-    });
+    setIsEditing(true); setCurrentId(ing.id);
+    setFormData({ name: ing.name || '', unit: ing.unit || 'g', imageUrl: ing.imageUrl || '' });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa nguyên liệu này?')) {
-      try {
-        await deleteIngredient(id);
-        fetchIngredients();
-      } catch (err) {
-        console.error(err);
-        alert('Xóa nguyên liệu thất bại.');
-      }
-    }
+    if (!window.confirm('Bạn có chắc chắn muốn xóa nguyên liệu này?')) return;
+    try { await deleteIngredient(id); fetchIngredients(); }
+    catch (err) { alert('Xóa nguyên liệu thất bại.'); }
   };
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     try {
       setUploading(true);
       const res = await uploadImage(file);
       setFormData((prev) => ({ ...prev, imageUrl: res.data.url }));
-    } catch (err) {
-      console.error(err);
-      alert('Không thể tải ảnh lên.');
-    } finally {
-      setUploading(false);
-    }
+    } catch { alert('Không thể tải ảnh lên.'); }
+    finally { setUploading(false); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.unit) {
-      alert('Tên nguyên liệu và đơn vị không được để trống!');
-      return;
-    }
-
+    if (!formData.name || !formData.unit) { alert('Tên và đơn vị không được để trống!'); return; }
     try {
-      if (isEditing) {
-        await updateIngredient(currentId, formData);
-      } else {
-        await createIngredient(formData);
-      }
-      setIsModalOpen(false);
-      fetchIngredients();
-    } catch (err) {
-      console.error(err);
-      alert('Lưu nguyên liệu thất bại.');
-    }
+      if (isEditing) await updateIngredient(currentId, formData);
+      else await createIngredient(formData);
+      setIsModalOpen(false); fetchIngredients();
+    } catch { alert('Lưu nguyên liệu thất bại.'); }
   };
 
-  const filteredIngredients = ingredients.filter((ing) =>
-    ing.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = ingredients.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   return (
     <AdminLayout>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 className="text-3xl font-bold text-[#191d19]">Ingredients Library</h2>
-          <p className="text-[#42493f]">Maintain the list of organic raw materials and kitchen supplies.</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 700, color: C.onSurface, letterSpacing: '-0.02em' }}>Ingredients Library</h1>
+          <p style={{ color: C.onSurfaceVariant, fontSize: '15px', marginTop: '4px' }}>Maintain your inventory of raw components and units.</p>
         </div>
         <button
           onClick={handleOpenAdd}
-          className="bg-[#40683e] hover:bg-[#284f28] text-white px-5 py-3 rounded-xl font-bold transition-all shadow-xs flex items-center justify-center gap-2"
+          style={{ backgroundColor: C.primaryContainer, color: C.onPrimaryContainer, borderRadius: '14px', padding: '10px 24px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(57,105,56,0.15)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.primary; e.currentTarget.style.color = 'white'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = C.primaryContainer; e.currentTarget.style.color = C.onPrimaryContainer; }}
         >
-          <span className="material-symbols-outlined">add_circle</span>
-          Add Ingredient
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>add</span>
+          Add New Ingredient
         </button>
       </div>
 
-      {/* Bento Grid Stats like mockup */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-xl border border-[#c1c9bc] flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#cefdc7] text-[#40683e] rounded-full flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-2xl">inventory_2</span>
+      {/* Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        {[
+          { icon: 'inventory_2', label: 'Total Items', value: ingredients.length, bg: C.tertiaryContainer, color: C.tertiary },
+          { icon: 'warning', label: 'No Image', value: ingredients.filter(i => !i.imageUrl).length, bg: C.secondaryContainer, color: C.secondary },
+          { icon: 'category', label: 'Unique Units', value: new Set(ingredients.map(i => i.unit)).size, bg: C.primaryContainer, color: C.primary },
+        ].map((s) => (
+          <div key={s.label} style={{ backgroundColor: C.surfaceContainerLowest, borderRadius: '16px', padding: '20px', boxShadow: '0 4px 16px rgba(57,105,56,0.05)', border: `1px solid ${C.outlineVariant}`, display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ color: s.color, fontSize: '22px' }}>{s.icon}</span>
+            </div>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 600, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
+              <p style={{ fontSize: '26px', fontWeight: 700, color: C.onSurface, lineHeight: '32px' }}>{s.value}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-bold text-[#42493f] uppercase">Total Items</p>
-            <p className="text-2xl font-extrabold text-[#191d19]">{ingredients.length}</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-[#c1c9bc] flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#ffdada] text-[#735858] rounded-full flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-2xl">warning</span>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-[#42493f] uppercase">Unassigned Icons</p>
-            <p className="text-2xl font-extrabold text-[#191d19]">
-              {ingredients.filter(i => !i.imageUrl).length}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-[#c1c9bc] flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#c8ffc0] text-[#215023] rounded-full flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-2xl">local_shipping</span>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-[#42493f] uppercase">Total Units</p>
-            <p className="text-2xl font-extrabold text-[#191d19]">
-              {new Set(ingredients.map(i => i.unit)).size}
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Filter / Search bar */}
-      <div className="bg-white p-5 rounded-2xl border border-[#c1c9bc] mb-6 flex gap-4 items-center">
-        <span className="material-symbols-outlined text-[#42493f]">search</span>
-        <input
-          type="text"
-          placeholder="Tìm kiếm nguyên liệu..."
-          className="w-full bg-transparent border-none focus:outline-hidden text-sm"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      {/* Search + Table */}
+      <div style={{ backgroundColor: C.surfaceContainerLowest, borderRadius: '16px', border: `1px solid ${C.outlineVariant}`, boxShadow: '0 4px 16px rgba(57,105,56,0.05)', overflow: 'hidden' }}>
 
-      {error && <div className="p-4 bg-red-100 text-red-700 rounded-xl mb-6">{error}</div>}
+        {/* Search Bar */}
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.outlineVariant}`, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className="material-symbols-outlined" style={{ color: C.onSurfaceVariant, fontSize: '20px' }}>search</span>
+          <input
+            type="text"
+            placeholder="Search ingredients..."
+            style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '14px', color: C.onSurface }}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: C.onSurfaceVariant }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+            </button>
+          )}
+        </div>
 
-      {/* Table Container */}
-      <div className="bg-white rounded-2xl border border-[#c1c9bc] overflow-hidden shadow-xs">
+        {error && <div style={{ padding: '12px 20px', backgroundColor: C.errorContainer, color: C.error, fontSize: '13px' }}>{error}</div>}
+
+        {/* Table */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#396938]"></div>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: `3px solid ${C.primaryContainer}`, borderTopColor: C.primary, animation: 'spin 0.8s linear infinite' }} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="bg-[#f2f5ee] border-b border-[#c1c9bc]">
-                  <th className="px-6 py-5 text-xs font-bold text-[#42493f] uppercase tracking-wider">Icon</th>
-                  <th className="px-6 py-5 text-xs font-bold text-[#42493f] uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-5 text-xs font-bold text-[#42493f] uppercase tracking-wider">Unit</th>
-                  <th className="px-6 py-5 text-xs font-bold text-[#42493f] uppercase tracking-wider text-right">Actions</th>
+                <tr style={{ backgroundColor: C.surfaceContainerLow, borderBottom: `1px solid ${C.outlineVariant}` }}>
+                  {['Icon', 'Name', 'Unit', 'Actions'].map((h, i) => (
+                    <th key={h} style={{ padding: '12px 20px', fontSize: '11px', fontWeight: 700, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: i === 3 ? 'right' : 'left' }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e6e9e2]">
-                {filteredIngredients.length === 0 ? (
+              <tbody>
+                {paginated.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center py-10 text-[#42493f] font-medium">
-                      Không tìm thấy nguyên liệu nào.
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '48px', color: C.onSurfaceVariant, fontSize: '14px' }}>
+                      No ingredients found.
                     </td>
                   </tr>
-                ) : (
-                  filteredIngredients.map((ing) => (
-                    <tr key={ing.id} className="hover:bg-[#f7faf3] transition-colors">
-                      <td className="px-6 py-5">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-[#c1c9bc] flex items-center justify-center">
-                          {ing.imageUrl ? (
-                            <img alt={ing.name} className="w-full h-full object-cover" src={ing.imageUrl} />
-                          ) : (
-                            <span className="material-symbols-outlined text-[#40683e]">eco</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="font-bold text-[#191d19]">{ing.name}</span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="px-3 py-1 rounded-full bg-[#e6e9e2] text-[#42493f] text-xs font-bold">
-                          {ing.unit}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleOpenEdit(ing)}
-                            className="p-2 text-[#40683e] hover:bg-emerald-50 rounded-xl transition-all"
-                            title="Edit"
-                          >
-                            <span className="material-symbols-outlined">edit</span>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(ing.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                            title="Delete"
-                          >
-                            <span className="material-symbols-outlined">delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ) : paginated.map((ing, idx) => (
+                  <tr
+                    key={ing.id}
+                    className="ingredient-row"
+                    style={{ borderBottom: `1px solid ${C.outlineVariant}`, transition: 'background 0.15s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.surfaceBright; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    <td style={{ padding: '14px 20px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: C.surfaceContainerHigh, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        {ing.imageUrl ? (
+                          <img src={ing.imageUrl} alt={ing.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span className="material-symbols-outlined" style={{ color: iconColors[idx % iconColors.length], fontSize: '20px' }}>eco</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 20px' }}>
+                      <p style={{ fontSize: '15px', fontWeight: 600, color: C.onSurface }}>{ing.name}</p>
+                    </td>
+                    <td style={{ padding: '14px 20px' }}>
+                      <span style={{ backgroundColor: C.surfaceContainerHigh, color: C.onSurfaceVariant, padding: '2px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 600 }}>
+                        {ing.unit}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '4px' }}>
+                        <button
+                          onClick={() => handleOpenEdit(ing)}
+                          style={{ padding: '8px', borderRadius: '10px', border: 'none', cursor: 'pointer', color: C.primary, backgroundColor: 'transparent', transition: 'background 0.15s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.primaryContainer; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                          title="Edit"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ing.id)}
+                          style={{ padding: '8px', borderRadius: '10px', border: 'none', cursor: 'pointer', color: C.error, backgroundColor: 'transparent', transition: 'background 0.15s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.errorContainer; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                          title="Delete"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
+
+        {/* Pagination Footer */}
+        {!loading && filtered.length > 0 && (
+          <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.outlineVariant}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: C.surfaceContainerLowest }}>
+            <span style={{ fontSize: '12px', color: C.onSurfaceVariant }}>
+              Showing {(currentPage - 1) * perPage + 1}–{Math.min(currentPage * perPage, filtered.length)} of {filtered.length} ingredients
+            </span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{ padding: '6px 14px', borderRadius: '10px', border: `1px solid ${C.outlineVariant}`, backgroundColor: 'transparent', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1, fontSize: '13px', color: C.onSurfaceVariant }}
+              >
+                Previous
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    style={{ width: '36px', height: '36px', borderRadius: '10px', border: 'none', cursor: 'pointer', backgroundColor: currentPage === page ? C.primary : 'transparent', color: currentPage === page ? 'white' : C.onSurfaceVariant, fontWeight: currentPage === page ? 700 : 400, fontSize: '13px' }}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{ padding: '6px 14px', borderRadius: '10px', border: `1px solid ${C.outlineVariant}`, backgroundColor: 'transparent', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1, fontSize: '13px', color: C.onSurfaceVariant }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Form Modal */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-[#191d19]">
-                {isEditing ? 'Cập Nhật Nguyên Liệu' : 'Thêm Nguyên Liệu Mới'}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '20px', width: '100%', maxWidth: '440px', padding: '32px', boxShadow: '0 24px 64px rgba(0,0,0,0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: C.onSurface }}>
+                {isEditing ? 'Edit Ingredient' : 'Add New Ingredient'}
               </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-all text-gray-500"
-              >
+              <button onClick={() => setIsModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '6px', borderRadius: '50%', color: C.onSurfaceVariant }}>
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-[#42493f] uppercase tracking-wider mb-2">Tên Nguyên Liệu</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: Rau bina, Bơ, Trứng..."
-                  className="w-full bg-[#f2f5ee] border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#396938]"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {[
+                { label: 'Ingredient Name', key: 'name', placeholder: 'e.g. Baby Spinach, Avocado...' },
+                { label: 'Unit', key: 'unit', placeholder: 'g, kg, piece, ml...' },
+              ].map(({ label, key, placeholder }) => (
+                <div key={key}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>{label}</label>
+                  <input
+                    type="text" required placeholder={placeholder}
+                    style={{ width: '100%', backgroundColor: C.surfaceContainerLow, border: 'none', borderRadius: '12px', padding: '12px 16px', fontSize: '14px', color: C.onSurface, outline: 'none', boxSizing: 'border-box' }}
+                    value={formData[key]}
+                    onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                    onFocus={(e) => { e.target.style.boxShadow = `0 0 0 2px ${C.primary}`; }}
+                    onBlur={(e) => { e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+              ))}
 
+              {/* Image Upload */}
               <div>
-                <label className="block text-xs font-bold text-[#42493f] uppercase tracking-wider mb-2">Đơn Vị Tính</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="g, kg, quả, muỗng, ml..."
-                  className="w-full bg-[#f2f5ee] border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#396938]"
-                  value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#42493f] uppercase tracking-wider mb-2">Biểu Tượng / Hình Ảnh</label>
-                <div className="flex gap-4 items-center">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden shadow-xs bg-gray-100 border flex items-center justify-center shrink-0">
+                <label style={{ fontSize: '11px', fontWeight: 700, color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Image (Optional)</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', backgroundColor: C.surfaceContainerHigh, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {formData.imageUrl ? (
-                      <img className="w-full h-full object-cover" src={formData.imageUrl} />
+                      <img src={formData.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span className="material-symbols-outlined text-[#40683e] text-3xl">eco</span>
+                      <span className="material-symbols-outlined" style={{ color: C.primary, fontSize: '28px' }}>eco</span>
                     )}
                   </div>
-                  <div className="grow">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="ingredient-image-input"
-                      onChange={handleImageChange}
-                      disabled={uploading}
-                    />
-                    <label
-                      htmlFor="ingredient-image-input"
-                      className="inline-block bg-[#f2f5ee] hover:bg-[#e6e9e2] border border-[#c1c9bc] rounded-xl px-4 py-2.5 text-xs font-bold cursor-pointer transition-all"
-                    >
-                      {uploading ? 'Đang tải ảnh...' : 'Chọn ảnh / Tải lên'}
+                  <div style={{ flex: 1 }}>
+                    <input type="file" accept="image/*" id="ing-img" className="hidden" onChange={handleImageChange} disabled={uploading} />
+                    <label htmlFor="ing-img" style={{ display: 'inline-block', backgroundColor: C.surfaceContainerLow, border: `1px solid ${C.outlineVariant}`, borderRadius: '10px', padding: '8px 16px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: C.onSurfaceVariant }}>
+                      {uploading ? 'Uploading...' : 'Choose File'}
                     </label>
                     <input
-                      type="text"
-                      placeholder="Hoặc dán URL ảnh..."
-                      className="w-full mt-2 bg-[#f2f5ee] border-none rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-[#396938]"
+                      type="text" placeholder="Or paste image URL..."
+                      style={{ width: '100%', marginTop: '8px', backgroundColor: C.surfaceContainerLow, border: 'none', borderRadius: '10px', padding: '8px 12px', fontSize: '12px', color: C.onSurface, outline: 'none', boxSizing: 'border-box' }}
                       value={formData.imageUrl}
                       onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                     />
@@ -329,19 +333,16 @@ export default function ManageIngredients() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#c1c9bc] flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 border border-[#c1c9bc] rounded-xl text-sm font-bold text-[#42493f] hover:bg-gray-50 transition-all"
-                >
-                  Hủy bỏ
+              <div style={{ borderTop: `1px solid ${C.outlineVariant}`, paddingTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)}
+                  style={{ padding: '10px 20px', border: `1px solid ${C.outlineVariant}`, borderRadius: '12px', fontSize: '14px', fontWeight: 600, color: C.onSurfaceVariant, backgroundColor: 'white', cursor: 'pointer' }}>
+                  Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-[#40683e] hover:bg-[#284f28] text-white rounded-xl text-sm font-bold transition-all shadow-xs"
-                >
-                  {isEditing ? 'Lưu Thay Đổi' : 'Thêm'}
+                <button type="submit"
+                  style={{ padding: '10px 24px', backgroundColor: C.primary, color: 'white', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}>
+                  {isEditing ? 'Save Changes' : 'Add Ingredient'}
                 </button>
               </div>
             </form>
